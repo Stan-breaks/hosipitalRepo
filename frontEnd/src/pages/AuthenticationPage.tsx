@@ -82,14 +82,12 @@ const AuthenticationPage = () => {
     try {
       // TODO: Implement actual API call
       var response = await authService.login(data);
-      if (response.user && response.token) {
-        console.log("Login submitted:", data);
-        localStorage.setItem("token", response.token);
-        toast({
-          title: "Success!",
-          description: "Logged in successfully.",
-        });
-      }
+      console.log(response);
+      localStorage.setItem("token", response.token);
+      toast({
+        title: "Success!",
+        description: "Logged in successfully.",
+      });
     } catch (error) {
       toast({
         title: "Error",
