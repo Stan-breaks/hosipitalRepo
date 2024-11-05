@@ -1,4 +1,3 @@
-// routes/middleware/cors.go
 package middleware
 
 import "net/http"
