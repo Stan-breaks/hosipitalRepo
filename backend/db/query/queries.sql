@@ -97,7 +97,7 @@ FROM users;
 
 -- Get a user by Email
 -- name: GetUserByEmail :one
-SELECT id, fullname, email, phone, created_at, updated_at 
+SELECT id, fullname, email, phone, password, created_at, updated_at 
 FROM users 
 WHERE email = ?;
 
