@@ -260,29 +260,21 @@ func (q *Queries) GetSpecialtyByName(ctx context.Context, name string) (Specialt
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, fullname, email, phone, created_at, updated_at 
+SELECT id, fullname, email, phone, password, created_at, updated_at 
 FROM users 
 WHERE email = ?
 `
 
-type GetUserByEmailRow struct {
-	ID        int32          `json:"id"`
-	Fullname  string         `json:"fullname"`
-	Email     sql.NullString `json:"email"`
-	Phone     sql.NullString `json:"phone"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-}
-
 // Get a user by Email
-func (q *Queries) GetUserByEmail(ctx context.Context, email sql.NullString) (GetUserByEmailRow, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email sql.NullString) (User, error) {
 	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
-	var i GetUserByEmailRow
+	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Fullname,
 		&i.Email,
 		&i.Phone,
+		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
