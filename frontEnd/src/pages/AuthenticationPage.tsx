@@ -18,13 +18,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { LoginCredentials, RegisterData } from "../types/auth";
 import { authService } from "../services/auth";
 
@@ -37,7 +30,6 @@ const AuthenticationPage = () => {
     defaultValues: {
       email: "",
       password: "",
-      role: "patient",
       phoneNumber: "",
       fullName: "",
     },
@@ -214,31 +206,6 @@ const AuthenticationPage = () => {
                             {...field}
                           />
                         </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={registerForm.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Register as</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="patient">Patient</SelectItem>
-                            <SelectItem value="doctor">Doctor</SelectItem>
-                            <SelectItem value="hospital_admin">
-                              Hospital Administrator
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
                       </FormItem>
                     )}
                   />
