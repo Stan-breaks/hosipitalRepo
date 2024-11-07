@@ -64,7 +64,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Register
-func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -92,37 +92,34 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetUser handles GET requests for user information
-func (h *UserHandler) GetUser(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
+func (h *UserHandler) RegisterDoctor(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	email := req.URL.Query().Get("email")
-	if email == "" {
-		http.Error(w, "Email parameter is required", http.StatusBadRequest)
+	var registerRequest struct {
+		Name          string         `json:"name"`
+		HospitalID    sql.NullInt32  `json:"hospital_id"`
+		SpecialtyID   sql.NullInt32  `json:"specialty_id"`
+		LicenseNumber string         `json:"license_number"`
+		Phone         sql.NullString `json:"phone"`
+		Password      sql.NullString `json:"password"`
+		Email         sql.NullString `json:"email"`
+		Status        string         `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&registerRequest); err != nil {
+		http.Error(w, "Invalid requests body", http.StatusBadRequest)
 		return
 	}
-
 	ctx := context.Background()
-	user, err := h.Queries.GetUserByEmail(ctx, email)
-
+	err := h.Queries.CreateDoctor(ctx, registerRequest)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			http.Error(w, "User not found", http.StatusNotFound)
-			return
-		}
-		log.Printf("Database error: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":        user.ID,
-		"fullName":  user.FullName,
-		"email":     user.Email,
-		"createdAt": user.CreatedAt,
+	json.NewEncoder(w).Encode(map[string]string{
+		"token":   "your-auth-token",
+		"message": "Registration successful",
 	})
 }
