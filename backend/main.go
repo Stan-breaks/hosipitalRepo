@@ -1,11 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"hopitalDir/internal/db"
 	"hopitalDir/routes"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -65,25 +65,31 @@ func setupDatabase() (*sql.DB, error) {
 		return nil, err
 	}
 
-	// Initialize the database with the schema
+	// Switch to the new database
 	_, err = db.Exec("USE " + dbName)
 	if err != nil {
 		return nil, err
 	}
 
+	// Execute the SQL statements from the schema.sql file
 	schemaFile, err := os.Open("db/schema/schema.sql")
 	if err != nil {
 		return nil, err
 	}
 	defer schemaFile.Close()
 
-	schema, err := io.ReadAll(schemaFile)
-	if err != nil {
-		return nil, err
+	scanner := bufio.NewScanner(schemaFile)
+	for scanner.Scan() {
+		sql := scanner.Text()
+		if sql != "" {
+			_, err = db.Exec(sql)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 
-	_, err = db.Exec(string(schema))
-	if err != nil {
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 
