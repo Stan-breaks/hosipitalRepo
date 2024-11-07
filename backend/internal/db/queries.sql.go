@@ -116,10 +116,10 @@ VALUES (?, ?, ?, ?)
 `
 
 type CreateUserParams struct {
-	Fullname string         `json:"fullname"`
-	Email    sql.NullString `json:"email"`
-	Phone    sql.NullString `json:"phone"`
-	Password sql.NullString `json:"password"`
+	Fullname string `json:"fullname"`
+	Email    string `json:"email"`
+	Phone    string `json:"phone"`
+	Password string `json:"password"`
 }
 
 // Create a new user
@@ -266,7 +266,7 @@ WHERE email = ?
 `
 
 // Get a user by Email
-func (q *Queries) GetUserByEmail(ctx context.Context, email sql.NullString) (User, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
 	var i User
 	err := row.Scan(

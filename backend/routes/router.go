@@ -32,10 +32,12 @@ func (r *Router) setupRoutes() {
 	userHandler := handlers.NewUserHandler(r.queries)
 
 	// Register routes with both CORS and auth middleware
-	r.mux.HandleFunc("/user", middleware.CorsMiddleware(r.authMiddleware(userHandler.GetUser)))
+	//r.mux.HandleFunc("/user", middleware.CorsMiddleware(r.authMiddleware(userHandler.GetUser)))
 
-	// Add login route with only CORS middleware (no auth required)
+	// Add login and register route with only CORS middleware (no auth required)
 	r.mux.HandleFunc("/auth/login", middleware.CorsMiddleware(userHandler.Login))
+	r.mux.HandleFunc("/auth/register", middleware.CorsMiddleware(userHandler.RegisterUser))
+	r.mux.HandleFunc("auth/registerDoctor", middleware.CorsMiddleware(userHandler.RegisterDoctor))
 }
 
 // Handler returns the http.Handler for use by the server

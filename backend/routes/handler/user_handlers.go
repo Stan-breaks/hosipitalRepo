@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"hopitalDir/internal/db"
 	"log"
 	"net/http"
@@ -24,14 +25,15 @@ func NewUserHandler(queries *db.Queries) *UserHandler {
 
 // Login handles user authentication
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("/auth/login")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var loginRequest struct {
-		Email    sql.NullString `json:"email"`
-		Password sql.NullString `json:"password"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&loginRequest); err != nil {
@@ -67,22 +69,25 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		fmt.Println("/auth/register " + string(http.StatusMethodNotAllowed))
 		return
 	}
 	var registerRequest struct {
-		Fullname string         `json:"fullname"`
-		Email    sql.NullString `json:"email"`
-		Phone    sql.NullString `json:"phone"`
-		Password sql.NullString `json:"password"`
+		Fullname string `json:"fullname"`
+		Email    string `json:"email"`
+		Phone    string `json:"phone"`
+		Password string `json:"password"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&registerRequest); err != nil {
 		http.Error(w, "Invalid requests body", http.StatusBadRequest)
+		fmt.Println("/auth/register " + string(http.StatusBadRequest))
 		return
 	}
 	ctx := context.Background()
 	err := h.Queries.CreateUser(ctx, registerRequest)
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		fmt.Println(err.Error())
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -90,9 +95,12 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		"token":   "your-auth-token",
 		"message": "Registration successful",
 	})
+	fmt.Println("/auth/register " + string(http.StatusOK))
+
 }
 
 func (h *UserHandler) RegisterDoctor(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("auth/registerDoctor")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return

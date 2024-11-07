@@ -60,9 +60,9 @@ type Specialty struct {
 type User struct {
 	ID        int32          `json:"id"`
 	Fullname  string         `json:"fullname"`
-	Email     sql.NullString `json:"email"`
-	Phone     sql.NullString `json:"phone"`
-	Password  sql.NullString `json:"password"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	Password  string `json:"password"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 }

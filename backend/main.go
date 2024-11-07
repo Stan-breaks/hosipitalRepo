@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hopitalDir/internal/db"
 	"hopitalDir/routes"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -49,9 +50,44 @@ func setupDatabase() (*sql.DB, error) {
 	dbName := os.Getenv("DB_NAME")
 
 	// Create database connection string
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
-		dbUser, dbPassword, dbHost, dbPort, dbName)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/?charset=utf8mb4,utf8", dbUser, dbPassword, dbHost, dbPort)
 
 	// Open database connection
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	// Create the database
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + dbName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize the database with the schema
+	_, err = db.Exec("USE " + dbName)
+	if err != nil {
+		return nil, err
+	}
+
+	schemaFile, err := os.Open("db/schema/schema.sql")
+	if err != nil {
+		return nil, err
+	}
+	defer schemaFile.Close()
+
+	schema, err := io.ReadAll(schemaFile)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = db.Exec(string(schema))
+	if err != nil {
+		return nil, err
+	}
+
+	// Reconnect to the database with the new schema
+	dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
 	return sql.Open("mysql", dsn)
 }

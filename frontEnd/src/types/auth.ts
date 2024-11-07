@@ -13,10 +13,10 @@ export interface LoginCredentials {
 }
 
 export interface RegisterData {
-  email: string;
-  password: string;
-  fullName: string;
-  phoneNumber: string;
+  FullName: string;
+  Email: string;
+  Phone: string;
+  Password: string;
 }
 
 export interface AuthResponse {

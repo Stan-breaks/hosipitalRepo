@@ -28,10 +28,10 @@ const AuthenticationPage = () => {
   // Register form
   const registerForm = useForm<RegisterData>({
     defaultValues: {
-      email: "",
-      password: "",
-      phoneNumber: "",
-      fullName: "",
+      Email: "",
+      Password: "",
+      Phone: "",
+      FullName: "",
     },
   });
 
@@ -47,6 +47,7 @@ const AuthenticationPage = () => {
     setIsLoading(true);
     try {
       // TODO: Implement actual API call
+      console.log(data);
       var response = await authService.register(data);
 
       //Display success
@@ -162,7 +163,7 @@ const AuthenticationPage = () => {
                 >
                   <FormField
                     control={registerForm.control}
-                    name="fullName"
+                    name="FullName"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Full Name</FormLabel>
@@ -178,7 +179,7 @@ const AuthenticationPage = () => {
 
                   <FormField
                     control={registerForm.control}
-                    name="email"
+                    name="Email"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Email</FormLabel>
@@ -195,7 +196,7 @@ const AuthenticationPage = () => {
 
                   <FormField
                     control={registerForm.control}
-                    name="phoneNumber"
+                    name="Phone"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
@@ -212,7 +213,7 @@ const AuthenticationPage = () => {
 
                   <FormField
                     control={registerForm.control}
-                    name="password"
+                    name="Password"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Password</FormLabel>
