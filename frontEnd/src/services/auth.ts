@@ -13,16 +13,4 @@ export const authService = {
     const response = await axios.post(`${API_URL}/auth/register`, data);
     return response.data;
   },
-
-  async verifyEmail(token: string): Promise<void> {
-    await axios.post(`${API_URL}/auth/verify-email`, { token });
-  },
-
-  async forgotPassword(email: string): Promise<void> {
-    await axios.post(`${API_URL}/auth/forgot-password`, { email });
-  },
-
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    await axios.post(`${API_URL}/auth/reset-password`, { token, newPassword });
-  },
 };

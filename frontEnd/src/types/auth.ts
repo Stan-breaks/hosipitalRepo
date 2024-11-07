@@ -3,7 +3,6 @@ export interface User {
   email: string;
   fullName: string;
   phoneNumber: string;
-  role: "patient" | "doctor" | "hospital_admin" | "system_admin";
   createdAt: string;
   updatedAt: string;
 }
@@ -18,7 +17,6 @@ export interface RegisterData {
   password: string;
   fullName: string;
   phoneNumber: string;
-  role: User["role"];
 }
 
 export interface AuthResponse {
