@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"fmt"
 	"hopitalDir/internal/db"
@@ -50,50 +49,9 @@ func setupDatabase() (*sql.DB, error) {
 	dbName := os.Getenv("DB_NAME")
 
 	// Create database connection string
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/?charset=utf8mb4,utf8", dbUser, dbPassword, dbHost, dbPort)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
 
 	// Open database connection
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	// Create the database
-	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS " + dbName)
-	if err != nil {
-		return nil, err
-	}
-
-	// Switch to the new database
-	_, err = db.Exec("USE " + dbName)
-	if err != nil {
-		return nil, err
-	}
-
-	// Execute the SQL statements from the schema.sql file
-	schemaFile, err := os.Open("db/schema/schema.sql")
-	if err != nil {
-		return nil, err
-	}
-	defer schemaFile.Close()
-
-	scanner := bufio.NewScanner(schemaFile)
-	for scanner.Scan() {
-		sql := scanner.Text()
-		if sql != "" {
-			_, err = db.Exec(sql)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	// Reconnect to the database with the new schema
-	dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPassword, dbHost, dbPort, dbName)
 	return sql.Open("mysql", dsn)
 }
