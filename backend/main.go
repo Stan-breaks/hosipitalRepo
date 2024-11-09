@@ -30,7 +30,8 @@ func main() {
 	queries := db.New(dbConn)
 
 	// 4. Set up the router with our database queries
-	router := routes.NewRouter(queries)
+	jwtSercet := os.Getenv("API_TOKEN")
+	router := routes.NewRouter(queries, []byte(jwtSercet))
 
 	// 5. Start the server
 	port := ":8080"
