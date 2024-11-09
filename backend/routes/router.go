@@ -11,15 +11,17 @@ import (
 
 // Router holds all the dependencies needed for our routes
 type Router struct {
-	queries *db.Queries    // Database queries
-	mux     *http.ServeMux // HTTP request multiplexer
+	queries   *db.Queries // Database queries
+	jwtSercet []byte
+	mux       *http.ServeMux // HTTP request multiplexer
 }
 
 // NewRouter creates and initializes a new Router
-func NewRouter(queries *db.Queries) *Router {
+func NewRouter(queries *db.Queries, jwtSercet []byte) *Router {
 	r := &Router{
-		queries: queries,
-		mux:     http.NewServeMux(),
+		queries:   queries,
+		jwtSercet: jwtSercet,
+		mux:       http.NewServeMux(),
 	}
 	// Set up all routes
 	r.setupRoutes()
@@ -29,7 +31,7 @@ func NewRouter(queries *db.Queries) *Router {
 // setupRoutes registers all route handlers
 func (r *Router) setupRoutes() {
 	// Create handlers
-	userHandler := handlers.NewUserHandler(r.queries)
+	userHandler := handlers.NewUserHandler(r.queries, r.jwtSercet)
 
 	// Register routes with both CORS and auth middleware
 	//r.mux.HandleFunc("/user", middleware.CorsMiddleware(r.authMiddleware(userHandler.GetUser)))

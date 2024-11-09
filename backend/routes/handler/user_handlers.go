@@ -33,24 +33,6 @@ type loginRequest struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
-type registerRequest struct {
-	Fullname string `json:"fullname" validate:"required"`
-	Email    string `json:"email" validate:"required,email"`
-	Phone    string `json:"phone" validate:"required"`
-	Password string `json:"password" validate:"required,min=8"`
-}
-
-type doctorRegisterRequest struct {
-	Name          string         `json:"name" validate:"required"`
-	HospitalID    sql.NullInt32  `json:"hospital_id" validate:"required"`
-	SpecialtyID   sql.NullInt32  `json:"specialty_id" validate:"required"`
-	LicenseNumber string         `json:"license_number" validate:"required"`
-	Phone         sql.NullString `json:"phone" validate:"required"`
-	Password      sql.NullString `json:"password" validate:"required,min=8"`
-	Email         sql.NullString `json:"email" validate:"required,email"`
-	Status        string         `json:"status" validate:"required"`
-}
-
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -110,7 +92,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req registerRequest
+	var req db.CreateUserParams
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -172,7 +154,7 @@ func (h *UserHandler) RegisterDoctor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req doctorRegisterRequest
+	var req db.CreateDoctorParams
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
@@ -196,7 +178,7 @@ func (h *UserHandler) RegisterDoctor(w http.ResponseWriter, r *http.Request) {
 
 	// Check if email already exists
 	if req.Email.Valid {
-		_, err = h.Queries.GetDoctorByEmail(ctx, req.Email.String)
+		_, err = h.Queries.GetDoctorByName(ctx, req.Name)
 		if err == nil {
 			http.Error(w, "Email already registered", http.StatusConflict)
 			return
