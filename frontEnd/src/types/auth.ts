@@ -20,6 +20,13 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
-  user: User;
+  message: string;
   token: string;
+}
+
+export interface DoctorRegisterData extends RegisterData {
+  licenseNumber: string;
+  hospitalId?: number;
+  specialtyId?: number;
+  status: string;
 }
