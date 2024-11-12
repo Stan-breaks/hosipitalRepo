@@ -24,8 +24,10 @@ import {
   DoctorRegisterData,
 } from "../types/auth";
 import { authService } from "../services/auth";
+import { useNavigate } from "react-router-dom";
 
 const AuthenticationPage = () => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -71,6 +73,7 @@ const AuthenticationPage = () => {
         throw new Error("Invalid response from the server");
       }
       localStorage.setItem("token", response.token);
+      navigate("/patientDashboard");
       toast({
         title: "Success!",
         description: "Account created successfully.",
@@ -91,8 +94,11 @@ const AuthenticationPage = () => {
     try {
       // TODO: Implement actual API call
       var response = await authService.login(data);
-      console.log(response);
+      if (!response.message || !response.token) {
+        throw new Error("Invalid response from the server");
+      }
       localStorage.setItem("token", response.token);
+      navigate("/patientDashboard");
       toast({
         title: "Success!",
         description: "Logged in successfully.",
@@ -112,7 +118,7 @@ const AuthenticationPage = () => {
     try {
       const response = await authService.registerDoctor(data);
 
-      if (!response.message && !response.token) {
+      if (!response.message || !response.token) {
         throw new Error("Invalid response from the server");
       }
 
