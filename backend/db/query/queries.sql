@@ -57,11 +57,11 @@ WHERE id = ?;
 SELECT id, name, hospital_id, specialty_id, license_number, phone, email, status, created_at, updated_at 
 FROM doctors;
 
--- Get a doctor by Name
--- name: GetDoctorByName :one
+-- Get a doctor by Email
+-- name: GetDoctorByEmail :one
 SELECT id, name, hospital_id, specialty_id, license_number, phone, email, status, created_at, updated_at 
 FROM doctors 
-WHERE name = ?;
+WHERE email = ?;
 
 -- Create a new doctor
 -- name: CreateDoctor :exec
