@@ -1,119 +1,164 @@
--- Get all hospitals
+-- name: GetHospital :one
+SELECT * FROM hospitals
+WHERE id = ? LIMIT 1;
+
 -- name: ListHospitals :many
-SELECT id, name, location, level, rating, phone, email, address, created_at, updated_at 
-FROM hospitals;
+SELECT * FROM hospitals
+ORDER BY name;
 
--- Get a hospital by Name
--- name: GetHospitalByName :one
-SELECT id, name, location, level, rating, phone, email, address, created_at, updated_at 
-FROM hospitals 
-WHERE name = ?;
+-- name: ListHospitalsByLocation :many
+SELECT * FROM hospitals
+WHERE location = ?
+ORDER BY rating DESC;
 
--- Create a new hospital
--- name: CreateHospital :exec
-INSERT INTO hospitals (name, location, level, rating, phone, email, address)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+-- name: CreateHospital :execresult
+INSERT INTO hospitals (
+    name, location, level, rating, phone, email, address
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?
+);
 
--- Update a hospital's details
 -- name: UpdateHospital :exec
 UPDATE hospitals 
-SET name = ?, location = ?, level = ?, rating = ?, phone = ?, email = ?, address = ?, updated_at = CURRENT_TIMESTAMP 
+SET name = ?, location = ?, level = ?, rating = ?, 
+    phone = ?, email = ?, address = ?
 WHERE id = ?;
 
--- Delete a hospital
 -- name: DeleteHospital :exec
-DELETE FROM hospitals 
-WHERE id = ?;
+DELETE FROM hospitals WHERE id = ?;
 
--- Get all specialties
--- name: ListSpecialties :many
-SELECT id, name, description, created_at 
-FROM specialties;
+-- name: GetDoctor :one
+SELECT d.*, h.name as hospital_name, s.name as specialty_name
+FROM doctors d
+JOIN hospitals h ON d.hospital_id = h.id
+JOIN specialties s ON d.specialty_id = s.id
+WHERE d.id = ? LIMIT 1;
 
--- Get a specialty by Name
--- name: GetSpecialtyByName :one
-SELECT id, name, description, created_at 
-FROM specialties 
-WHERE name = ?;
-
--- Create a new specialty
--- name: CreateSpecialty :exec
-INSERT INTO specialties (name, description)
-VALUES (?, ?);
-
--- Update a specialty's details
--- name: UpdateSpecialty :exec
-UPDATE specialties 
-SET name = ?, description = ?, created_at = CURRENT_TIMESTAMP 
-WHERE id = ?;
-
--- Delete a specialty
--- name: DeleteSpecialty :exec
-DELETE FROM specialties 
-WHERE id = ?;
-
--- Get all doctors
--- name: ListDoctors :many
-SELECT id, name, hospital_id, specialty_id, license_number, phone, email, status, created_at, updated_at 
-FROM doctors;
-
--- Get a doctor by Email
 -- name: GetDoctorByEmail :one
-SELECT id, name, hospital_id, specialty_id, license_number, phone, email, status, created_at, updated_at 
-FROM doctors 
-WHERE email = ?;
+SELECT * FROM doctors
+WHERE email = ? LIMIT 1;
 
--- Create a new doctor
--- name: CreateDoctor :exec
-INSERT INTO doctors (name, hospital_id, specialty_id, license_number, phone, password, email, status)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+-- name: ListDoctors :many
+SELECT d.*, h.name as hospital_name, s.name as specialty_name
+FROM doctors d
+JOIN hospitals h ON d.hospital_id = h.id
+JOIN specialties s ON d.specialty_id = s.id
+ORDER BY d.name;
 
--- Update a doctor's details
--- name: UpdateDoctor :exec
-UPDATE doctors 
-SET name = ?, hospital_id = ?, specialty_id = ?, license_number = ?, phone = ?,password = ?, email = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+-- name: CreateDoctor :execresult
+INSERT INTO doctors (
+    name, hospital_id, specialty_id, license_number,
+    phone, email, password, status
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?, ?
+);
+
+-- name: GetAppointments :many
+SELECT 
+    a.*,
+    d.name as doctor_name,
+    u.fullname as patient_name
+FROM appointments a
+JOIN doctors d ON a.doctor_id = d.id
+JOIN users u ON a.user_id = u.id
+WHERE a.date = ?;
+
+-- name: GetDoctorAppointments :many
+SELECT 
+    a.*,
+    u.fullname as patient_name
+FROM appointments a
+JOIN users u ON a.user_id = u.id
+WHERE a.doctor_id = ? AND a.date BETWEEN ? AND ?
+ORDER BY a.date, a.time;
+
+-- name: CreateAppointment :execresult
+INSERT INTO appointments (
+    date, time, doctor_id, user_id, status, reason
+) VALUES (
+    ?, ?, ?, ?, ?, ?
+);
+
+-- name: UpdateAppointmentStatus :exec
+UPDATE appointments 
+SET status = ?
 WHERE id = ?;
 
--- Delete a doctor
--- name: DeleteDoctor :exec
-DELETE FROM doctors 
-WHERE id = ?;
+-- name: GetUserAppointments :many
+SELECT 
+    a.*,
+    d.name as doctor_name,
+    h.name as hospital_name
+FROM appointments a
+JOIN doctors d ON a.doctor_id = d.id
+JOIN hospitals h ON d.hospital_id = h.id
+WHERE a.user_id = ?
+ORDER BY a.date DESC, a.time DESC;
 
--- Get all reviews for a hospital
--- name: ListHospitalReviews :many
-SELECT id, hospital_id, user_id, rating, comment, created_at 
-FROM reviews 
-WHERE hospital_id = ?;
+-- name: CreateUser :execresult
+INSERT INTO users (
+    fullname, email, phone, password
+) VALUES (
+    ?, ?, ?, ?
+);
 
--- Create a new review
--- name: CreateReview :exec
-INSERT INTO reviews (hospital_id, user_id, rating, comment)
-VALUES (?, ?, ?, ?);
+-- name: GetUser :one
+SELECT * FROM users
+WHERE id = ? LIMIT 1;
 
--- Get all users
--- name: ListUsers :many
-SELECT id, fullname, email, phone, created_at, updated_at 
-FROM users;
-
--- Get a user by Email
 -- name: GetUserByEmail :one
-SELECT id, fullname, email, phone, password, created_at, updated_at 
-FROM users 
-WHERE email = ?;
+SELECT * FROM users
+WHERE email = ? LIMIT 1;
 
--- Create a new user
--- name: CreateUser :exec
-INSERT INTO users (fullname, email, phone, password)
-VALUES (?, ?, ?, ?);
+-- name: CreateReview :execresult
+INSERT INTO reviews (
+    hospital_id, user_id, rating, comment
+) VALUES (
+    ?, ?, ?, ?
+);
 
--- Update a user's details
--- name: UpdateUser :exec
-UPDATE users 
-SET fullname = ?, email = ?, phone = ?, password = ?, updated_at = CURRENT_TIMESTAMP 
-WHERE id = ?;
+-- name: GetHospitalReviews :many
+SELECT 
+    r.*,
+    u.fullname as reviewer_name
+FROM reviews r
+JOIN users u ON r.user_id = u.id
+WHERE r.hospital_id = ?
+ORDER BY r.created_at DESC;
 
--- Delete a user
--- name: DeleteUser :exec
-DELETE FROM users 
-WHERE id = ?;
+-- name: GetHospitalSpecialties :many
+SELECT 
+    s.*
+FROM specialties s
+JOIN hospital_specialties hs ON s.id = hs.specialty_id
+WHERE hs.hospital_id = ?;
 
+-- name: AddHospitalSpecialty :exec
+INSERT INTO hospital_specialties (
+    hospital_id, specialty_id
+) VALUES (
+    ?, ?
+);
+
+-- name: GetDoctorsBySpecialty :many
+SELECT 
+    d.*,
+    h.name as hospital_name
+FROM doctors d
+JOIN hospitals h ON d.hospital_id = h.id
+WHERE d.specialty_id = ? AND d.status = 'active'
+ORDER BY d.name;
+
+-- name: GetHospitalStats :one
+SELECT 
+    COUNT(DISTINCT d.id) as doctor_count,
+    COUNT(DISTINCT s.id) as specialty_count,
+    COALESCE(AVG(r.rating), 0) as average_rating,
+    COUNT(DISTINCT r.id) as review_count
+FROM hospitals h
+LEFT JOIN doctors d ON h.id = d.hospital_id
+LEFT JOIN hospital_specialties hs ON h.id = hs.hospital_id
+LEFT JOIN specialties s ON hs.specialty_id = s.id
+LEFT JOIN reviews r ON h.id = r.hospital_id
+WHERE h.id = ?
+GROUP BY h.id;
