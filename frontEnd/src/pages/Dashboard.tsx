@@ -20,6 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Link } from "react-router-dom";
 
 interface AppointmentType {
   id: string;
@@ -159,7 +160,7 @@ const PatientDashboard = () => {
       </Card>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center space-x-2">
             <Calendar className="h-6 w-6 text-blue-600" />
@@ -181,25 +182,13 @@ const PatientDashboard = () => {
             <p className="text-3xl font-bold text-purple-600">3</p>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center space-x-2">
-            <FileText className="h-6 w-6 text-green-600" />
-            <CardTitle className="text-lg">Medical Records</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full">
-              View Records
-            </Button>
-          </CardContent>
-        </Card>
       </div>
-
-      {/* Nearby Hospitals */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Nearby Verified Hospitals</CardTitle>
-          <Button variant="outline">View All</Button>
+          <Link to="/hospitalDirectory">
+            <Button variant="outline">View All</Button>
+          </Link>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -244,10 +233,6 @@ const PatientDashboard = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Your Appointments</CardTitle>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Calendar className="mr-2 h-4 w-4" />
-            Book Appointment
-          </Button>
         </CardHeader>
         <CardContent>
           <Table>

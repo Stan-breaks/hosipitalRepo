@@ -155,7 +155,7 @@ INSERT INTO users (
 type CreateUserParams struct {
 	Fullname string         `json:"fullname"`
 	Email    string         `json:"email"`
-	Phone    sql.NullString `json:"phone"`
+	Phone    string `json:"phone"`
 	Password string         `json:"password"`
 }
 

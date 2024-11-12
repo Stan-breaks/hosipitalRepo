@@ -34,10 +34,10 @@ const AuthenticationPage = () => {
   // Register form
   const registerForm = useForm<RegisterData>({
     defaultValues: {
-      Email: "",
-      Password: "",
-      Phone: "",
       FullName: "",
+      Email: "",
+      Phone: "",
+      Password: "",
     },
   });
 
@@ -65,6 +65,7 @@ const AuthenticationPage = () => {
   const handleRegister = async (data: RegisterData) => {
     setIsLoading(true);
     try {
+      console.log(data);
       // TODO: Implement actual API call
       var response = await authService.register(data);
 

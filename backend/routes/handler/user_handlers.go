@@ -33,6 +33,7 @@ type loginRequest struct {
 	Password string `json:"password" validate:"required,min=8"`
 }
 
+// Login
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -135,15 +136,13 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RegisterUser
 func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+	log.Println("/auth/request")
 	var req db.CreateUserParams
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Println("json error: %v", err)
 		return
 	}
 
@@ -198,6 +197,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RegisterDoctor
 func (h *UserHandler) RegisterDoctor(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
