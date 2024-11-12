@@ -20,6 +20,7 @@ export interface RegisterData {
 }
 
 export interface AuthResponse {
+  role?: string;
   message: string;
   token: string;
 }
