@@ -76,7 +76,7 @@ const LandingPage = () => {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => navigate("/search")}
+                onClick={() => navigate("/register")}
               >
                 Search Hospitals
               </Button>
@@ -129,7 +129,7 @@ const LandingPage = () => {
                 <Button
                   size="lg"
                   className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => navigate("/search")}
+                  onClick={() => navigate("/register")}
                 >
                   <SearchIcon className="mr-2 h-4 w-4" /> Search
                 </Button>
