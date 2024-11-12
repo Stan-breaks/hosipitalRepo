@@ -50,26 +50,73 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.Queries.GetUserByEmail(ctx, req.Email)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if !errors.Is(err, sql.ErrNoRows) {
+			log.Printf("Database error: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		// If user not found, try doctor
+		doctor, err := h.Queries.GetDoctorByEmail(ctx, req.Email)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+				return
+			}
+			log.Printf("Database error: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		// Doctor found, verify password
+		if err := bcrypt.CompareHashAndPassword([]byte(doctor.Password), []byte(req.Password)); err != nil {
 			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 			return
 		}
-		log.Printf("Database error: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+
+		// Check if doctor is active
+		if doctor.Status != "active" {
+			http.Error(w, "Account is inactive", http.StatusUnauthorized)
+			return
+		}
+
+		// Generate JWT token for doctor
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"id":          doctor.ID,
+			"email":       doctor.Email,
+			"role":        "doctor",
+			"hospital_id": doctor.HospitalID,
+			"exp":         time.Now().Add(h.tokenExp).Unix(),
+		})
+
+		tokenString, err := token.SignedString(h.jwtSecret)
+		if err != nil {
+			log.Printf("Token signing error: %v", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"token":   tokenString,
+			"message": "Login successful",
+			"role":    "doctor",
+			"email":   doctor.Email,
+		})
 		return
 	}
 
-	// Compare hashed password
+	// User found, verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	// Generate JWT token
+	// Generate JWT token for user
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": user.ID,
-		"email":   user.Email,
-		"exp":     time.Now().Add(h.tokenExp).Unix(),
+		"id":    user.ID,
+		"email": user.Email,
+		"role":  "patient",
+		"exp":   time.Now().Add(h.tokenExp).Unix(),
 	})
 
 	tokenString, err := token.SignedString(h.jwtSecret)
@@ -80,9 +127,11 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"token":   tokenString,
 		"message": "Login successful",
+		"role":    "patient",
+		"email":   user.Email,
 	})
 }
 
@@ -122,7 +171,7 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Queries.CreateUser(ctx, req); err != nil {
+	if _, err := h.Queries.CreateUser(ctx, req); err != nil {
 		log.Printf("User creation error: %v", err)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
@@ -144,7 +193,8 @@ func (h *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"token":   tokenString,
-		"message": "Registration successful",
+		"message": "Login successful",
+		"email":   req.Email,
 	})
 }
 
@@ -161,24 +211,21 @@ func (h *UserHandler) RegisterDoctor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Hash password before storing
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password.String), bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Printf("Password hashing error: %v", err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	req.Password = sql.NullString{
-		String: string(hashedPassword),
-		Valid:  true,
-	}
+	req.Password = string(hashedPassword)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
 	// Check if email already exists
-	if req.Email.Valid {
-		_, err = h.Queries.GetDoctorByName(ctx, req.Name)
+	if req.Email != "" {
+		_, err = h.Queries.GetDoctorByEmail(ctx, req.Email)
 		if err == nil {
 			http.Error(w, "Email already registered", http.StatusConflict)
 			return
@@ -189,14 +236,21 @@ func (h *UserHandler) RegisterDoctor(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if err := h.Queries.CreateDoctor(ctx, req); err != nil {
+	if _, err := h.Queries.CreateDoctor(ctx, req); err != nil {
 		log.Printf("Doctor creation error: %v", err)
 		http.Error(w, "Failed to create doctor", http.StatusInternalServerError)
 		return
 	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"email": req.Email,
+		"exp":   time.Now().Add(h.tokenExp).Unix(),
+	})
 
+	tokenString, err := token.SignedString(h.jwtSecret)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Doctor registration successful",
+		"token":   tokenString,
+		"message": "Registration successful",
+		"email":   req.Email,
 	})
 }
