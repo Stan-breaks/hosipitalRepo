@@ -98,7 +98,11 @@ const AuthenticationPage = () => {
         throw new Error("Invalid response from the server");
       }
       localStorage.setItem("token", response.token);
-      navigate("/patientDashboard");
+      if (response.role == "patient") {
+        navigate("/patientDashboard");
+      } else {
+        navigate("/doctorDashboard");
+      }
       toast({
         title: "Success!",
         description: "Logged in successfully.",
