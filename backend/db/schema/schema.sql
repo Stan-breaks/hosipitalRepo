@@ -63,6 +63,17 @@ CREATE TABLE users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE appointments(
+id INT AUTO_INCREMENT PRIMARY KEY,
+date VARCHAR(255) NOT NULL,
+time VARCHAR(50) NOT NULL,
+doctor_id INT NOT NULL,
+user_id INT NOT NULL,
+status VARCHAR(50) NOT NULL DEFAULT 'scheduled',
+reason TEXT,
+FOREIGN KEY (doctor_id) REFERENCES doctors (id)
+FOREIGN KEY (user_id) REFERENCES users (id)
+)
 -- Indexes for better query performance
 CREATE INDEX idx_hospitals_location ON hospitals (location);
 CREATE INDEX idx_hospitals_rating ON hospitals (rating);
