@@ -24,6 +24,12 @@ func New(db DBTX) *Queries {
 func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	q := Queries{db: db}
 	var err error
+	if q.addHospitalSpecialtyStmt, err = db.PrepareContext(ctx, addHospitalSpecialty); err != nil {
+		return nil, fmt.Errorf("error preparing query AddHospitalSpecialty: %w", err)
+	}
+	if q.createAppointmentStmt, err = db.PrepareContext(ctx, createAppointment); err != nil {
+		return nil, fmt.Errorf("error preparing query CreateAppointment: %w", err)
+	}
 	if q.createDoctorStmt, err = db.PrepareContext(ctx, createDoctor); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateDoctor: %w", err)
 	}
@@ -33,32 +39,44 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createReviewStmt, err = db.PrepareContext(ctx, createReview); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateReview: %w", err)
 	}
-	if q.createSpecialtyStmt, err = db.PrepareContext(ctx, createSpecialty); err != nil {
-		return nil, fmt.Errorf("error preparing query CreateSpecialty: %w", err)
-	}
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
-	}
-	if q.deleteDoctorStmt, err = db.PrepareContext(ctx, deleteDoctor); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteDoctor: %w", err)
 	}
 	if q.deleteHospitalStmt, err = db.PrepareContext(ctx, deleteHospital); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteHospital: %w", err)
 	}
-	if q.deleteSpecialtyStmt, err = db.PrepareContext(ctx, deleteSpecialty); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteSpecialty: %w", err)
+	if q.getAppointmentsStmt, err = db.PrepareContext(ctx, getAppointments); err != nil {
+		return nil, fmt.Errorf("error preparing query GetAppointments: %w", err)
 	}
-	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
-		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
+	if q.getDoctorStmt, err = db.PrepareContext(ctx, getDoctor); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDoctor: %w", err)
 	}
-	if q.getDoctorByNameStmt, err = db.PrepareContext(ctx, getDoctorByName); err != nil {
-		return nil, fmt.Errorf("error preparing query GetDoctorByName: %w", err)
+	if q.getDoctorAppointmentsStmt, err = db.PrepareContext(ctx, getDoctorAppointments); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDoctorAppointments: %w", err)
 	}
-	if q.getHospitalByNameStmt, err = db.PrepareContext(ctx, getHospitalByName); err != nil {
-		return nil, fmt.Errorf("error preparing query GetHospitalByName: %w", err)
+	if q.getDoctorByEmailStmt, err = db.PrepareContext(ctx, getDoctorByEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDoctorByEmail: %w", err)
 	}
-	if q.getSpecialtyByNameStmt, err = db.PrepareContext(ctx, getSpecialtyByName); err != nil {
-		return nil, fmt.Errorf("error preparing query GetSpecialtyByName: %w", err)
+	if q.getDoctorsBySpecialtyStmt, err = db.PrepareContext(ctx, getDoctorsBySpecialty); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDoctorsBySpecialty: %w", err)
+	}
+	if q.getHospitalStmt, err = db.PrepareContext(ctx, getHospital); err != nil {
+		return nil, fmt.Errorf("error preparing query GetHospital: %w", err)
+	}
+	if q.getHospitalReviewsStmt, err = db.PrepareContext(ctx, getHospitalReviews); err != nil {
+		return nil, fmt.Errorf("error preparing query GetHospitalReviews: %w", err)
+	}
+	if q.getHospitalSpecialtiesStmt, err = db.PrepareContext(ctx, getHospitalSpecialties); err != nil {
+		return nil, fmt.Errorf("error preparing query GetHospitalSpecialties: %w", err)
+	}
+	if q.getHospitalStatsStmt, err = db.PrepareContext(ctx, getHospitalStats); err != nil {
+		return nil, fmt.Errorf("error preparing query GetHospitalStats: %w", err)
+	}
+	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
+	}
+	if q.getUserAppointmentsStmt, err = db.PrepareContext(ctx, getUserAppointments); err != nil {
+		return nil, fmt.Errorf("error preparing query GetUserAppointments: %w", err)
 	}
 	if q.getUserByEmailStmt, err = db.PrepareContext(ctx, getUserByEmail); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserByEmail: %w", err)
@@ -66,35 +84,33 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listDoctorsStmt, err = db.PrepareContext(ctx, listDoctors); err != nil {
 		return nil, fmt.Errorf("error preparing query ListDoctors: %w", err)
 	}
-	if q.listHospitalReviewsStmt, err = db.PrepareContext(ctx, listHospitalReviews); err != nil {
-		return nil, fmt.Errorf("error preparing query ListHospitalReviews: %w", err)
-	}
 	if q.listHospitalsStmt, err = db.PrepareContext(ctx, listHospitals); err != nil {
 		return nil, fmt.Errorf("error preparing query ListHospitals: %w", err)
 	}
-	if q.listSpecialtiesStmt, err = db.PrepareContext(ctx, listSpecialties); err != nil {
-		return nil, fmt.Errorf("error preparing query ListSpecialties: %w", err)
+	if q.listHospitalsByLocationStmt, err = db.PrepareContext(ctx, listHospitalsByLocation); err != nil {
+		return nil, fmt.Errorf("error preparing query ListHospitalsByLocation: %w", err)
 	}
-	if q.listUsersStmt, err = db.PrepareContext(ctx, listUsers); err != nil {
-		return nil, fmt.Errorf("error preparing query ListUsers: %w", err)
-	}
-	if q.updateDoctorStmt, err = db.PrepareContext(ctx, updateDoctor); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateDoctor: %w", err)
+	if q.updateAppointmentStatusStmt, err = db.PrepareContext(ctx, updateAppointmentStatus); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateAppointmentStatus: %w", err)
 	}
 	if q.updateHospitalStmt, err = db.PrepareContext(ctx, updateHospital); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateHospital: %w", err)
-	}
-	if q.updateSpecialtyStmt, err = db.PrepareContext(ctx, updateSpecialty); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateSpecialty: %w", err)
-	}
-	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
 	}
 	return &q, nil
 }
 
 func (q *Queries) Close() error {
 	var err error
+	if q.addHospitalSpecialtyStmt != nil {
+		if cerr := q.addHospitalSpecialtyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing addHospitalSpecialtyStmt: %w", cerr)
+		}
+	}
+	if q.createAppointmentStmt != nil {
+		if cerr := q.createAppointmentStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing createAppointmentStmt: %w", cerr)
+		}
+	}
 	if q.createDoctorStmt != nil {
 		if cerr := q.createDoctorStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createDoctorStmt: %w", cerr)
@@ -110,19 +126,9 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createReviewStmt: %w", cerr)
 		}
 	}
-	if q.createSpecialtyStmt != nil {
-		if cerr := q.createSpecialtyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing createSpecialtyStmt: %w", cerr)
-		}
-	}
 	if q.createUserStmt != nil {
 		if cerr := q.createUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
-		}
-	}
-	if q.deleteDoctorStmt != nil {
-		if cerr := q.deleteDoctorStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteDoctorStmt: %w", cerr)
 		}
 	}
 	if q.deleteHospitalStmt != nil {
@@ -130,29 +136,59 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteHospitalStmt: %w", cerr)
 		}
 	}
-	if q.deleteSpecialtyStmt != nil {
-		if cerr := q.deleteSpecialtyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteSpecialtyStmt: %w", cerr)
+	if q.getAppointmentsStmt != nil {
+		if cerr := q.getAppointmentsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getAppointmentsStmt: %w", cerr)
 		}
 	}
-	if q.deleteUserStmt != nil {
-		if cerr := q.deleteUserStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing deleteUserStmt: %w", cerr)
+	if q.getDoctorStmt != nil {
+		if cerr := q.getDoctorStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDoctorStmt: %w", cerr)
 		}
 	}
-	if q.getDoctorByNameStmt != nil {
-		if cerr := q.getDoctorByNameStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getDoctorByNameStmt: %w", cerr)
+	if q.getDoctorAppointmentsStmt != nil {
+		if cerr := q.getDoctorAppointmentsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDoctorAppointmentsStmt: %w", cerr)
 		}
 	}
-	if q.getHospitalByNameStmt != nil {
-		if cerr := q.getHospitalByNameStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getHospitalByNameStmt: %w", cerr)
+	if q.getDoctorByEmailStmt != nil {
+		if cerr := q.getDoctorByEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDoctorByEmailStmt: %w", cerr)
 		}
 	}
-	if q.getSpecialtyByNameStmt != nil {
-		if cerr := q.getSpecialtyByNameStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing getSpecialtyByNameStmt: %w", cerr)
+	if q.getDoctorsBySpecialtyStmt != nil {
+		if cerr := q.getDoctorsBySpecialtyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDoctorsBySpecialtyStmt: %w", cerr)
+		}
+	}
+	if q.getHospitalStmt != nil {
+		if cerr := q.getHospitalStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getHospitalStmt: %w", cerr)
+		}
+	}
+	if q.getHospitalReviewsStmt != nil {
+		if cerr := q.getHospitalReviewsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getHospitalReviewsStmt: %w", cerr)
+		}
+	}
+	if q.getHospitalSpecialtiesStmt != nil {
+		if cerr := q.getHospitalSpecialtiesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getHospitalSpecialtiesStmt: %w", cerr)
+		}
+	}
+	if q.getHospitalStatsStmt != nil {
+		if cerr := q.getHospitalStatsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getHospitalStatsStmt: %w", cerr)
+		}
+	}
+	if q.getUserStmt != nil {
+		if cerr := q.getUserStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserStmt: %w", cerr)
+		}
+	}
+	if q.getUserAppointmentsStmt != nil {
+		if cerr := q.getUserAppointmentsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getUserAppointmentsStmt: %w", cerr)
 		}
 	}
 	if q.getUserByEmailStmt != nil {
@@ -165,44 +201,24 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listDoctorsStmt: %w", cerr)
 		}
 	}
-	if q.listHospitalReviewsStmt != nil {
-		if cerr := q.listHospitalReviewsStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing listHospitalReviewsStmt: %w", cerr)
-		}
-	}
 	if q.listHospitalsStmt != nil {
 		if cerr := q.listHospitalsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listHospitalsStmt: %w", cerr)
 		}
 	}
-	if q.listSpecialtiesStmt != nil {
-		if cerr := q.listSpecialtiesStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing listSpecialtiesStmt: %w", cerr)
+	if q.listHospitalsByLocationStmt != nil {
+		if cerr := q.listHospitalsByLocationStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listHospitalsByLocationStmt: %w", cerr)
 		}
 	}
-	if q.listUsersStmt != nil {
-		if cerr := q.listUsersStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing listUsersStmt: %w", cerr)
-		}
-	}
-	if q.updateDoctorStmt != nil {
-		if cerr := q.updateDoctorStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateDoctorStmt: %w", cerr)
+	if q.updateAppointmentStatusStmt != nil {
+		if cerr := q.updateAppointmentStatusStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateAppointmentStatusStmt: %w", cerr)
 		}
 	}
 	if q.updateHospitalStmt != nil {
 		if cerr := q.updateHospitalStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateHospitalStmt: %w", cerr)
-		}
-	}
-	if q.updateSpecialtyStmt != nil {
-		if cerr := q.updateSpecialtyStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateSpecialtyStmt: %w", cerr)
-		}
-	}
-	if q.updateUserStmt != nil {
-		if cerr := q.updateUserStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserStmt: %w", cerr)
 		}
 	}
 	return err
@@ -242,57 +258,61 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                      DBTX
-	tx                      *sql.Tx
-	createDoctorStmt        *sql.Stmt
-	createHospitalStmt      *sql.Stmt
-	createReviewStmt        *sql.Stmt
-	createSpecialtyStmt     *sql.Stmt
-	createUserStmt          *sql.Stmt
-	deleteDoctorStmt        *sql.Stmt
-	deleteHospitalStmt      *sql.Stmt
-	deleteSpecialtyStmt     *sql.Stmt
-	deleteUserStmt          *sql.Stmt
-	getDoctorByNameStmt     *sql.Stmt
-	getHospitalByNameStmt   *sql.Stmt
-	getSpecialtyByNameStmt  *sql.Stmt
-	getUserByEmailStmt      *sql.Stmt
-	listDoctorsStmt         *sql.Stmt
-	listHospitalReviewsStmt *sql.Stmt
-	listHospitalsStmt       *sql.Stmt
-	listSpecialtiesStmt     *sql.Stmt
-	listUsersStmt           *sql.Stmt
-	updateDoctorStmt        *sql.Stmt
-	updateHospitalStmt      *sql.Stmt
-	updateSpecialtyStmt     *sql.Stmt
-	updateUserStmt          *sql.Stmt
+	db                          DBTX
+	tx                          *sql.Tx
+	addHospitalSpecialtyStmt    *sql.Stmt
+	createAppointmentStmt       *sql.Stmt
+	createDoctorStmt            *sql.Stmt
+	createHospitalStmt          *sql.Stmt
+	createReviewStmt            *sql.Stmt
+	createUserStmt              *sql.Stmt
+	deleteHospitalStmt          *sql.Stmt
+	getAppointmentsStmt         *sql.Stmt
+	getDoctorStmt               *sql.Stmt
+	getDoctorAppointmentsStmt   *sql.Stmt
+	getDoctorByEmailStmt        *sql.Stmt
+	getDoctorsBySpecialtyStmt   *sql.Stmt
+	getHospitalStmt             *sql.Stmt
+	getHospitalReviewsStmt      *sql.Stmt
+	getHospitalSpecialtiesStmt  *sql.Stmt
+	getHospitalStatsStmt        *sql.Stmt
+	getUserStmt                 *sql.Stmt
+	getUserAppointmentsStmt     *sql.Stmt
+	getUserByEmailStmt          *sql.Stmt
+	listDoctorsStmt             *sql.Stmt
+	listHospitalsStmt           *sql.Stmt
+	listHospitalsByLocationStmt *sql.Stmt
+	updateAppointmentStatusStmt *sql.Stmt
+	updateHospitalStmt          *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                      tx,
-		tx:                      tx,
-		createDoctorStmt:        q.createDoctorStmt,
-		createHospitalStmt:      q.createHospitalStmt,
-		createReviewStmt:        q.createReviewStmt,
-		createSpecialtyStmt:     q.createSpecialtyStmt,
-		createUserStmt:          q.createUserStmt,
-		deleteDoctorStmt:        q.deleteDoctorStmt,
-		deleteHospitalStmt:      q.deleteHospitalStmt,
-		deleteSpecialtyStmt:     q.deleteSpecialtyStmt,
-		deleteUserStmt:          q.deleteUserStmt,
-		getDoctorByNameStmt:     q.getDoctorByNameStmt,
-		getHospitalByNameStmt:   q.getHospitalByNameStmt,
-		getSpecialtyByNameStmt:  q.getSpecialtyByNameStmt,
-		getUserByEmailStmt:      q.getUserByEmailStmt,
-		listDoctorsStmt:         q.listDoctorsStmt,
-		listHospitalReviewsStmt: q.listHospitalReviewsStmt,
-		listHospitalsStmt:       q.listHospitalsStmt,
-		listSpecialtiesStmt:     q.listSpecialtiesStmt,
-		listUsersStmt:           q.listUsersStmt,
-		updateDoctorStmt:        q.updateDoctorStmt,
-		updateHospitalStmt:      q.updateHospitalStmt,
-		updateSpecialtyStmt:     q.updateSpecialtyStmt,
-		updateUserStmt:          q.updateUserStmt,
+		db:                          tx,
+		tx:                          tx,
+		addHospitalSpecialtyStmt:    q.addHospitalSpecialtyStmt,
+		createAppointmentStmt:       q.createAppointmentStmt,
+		createDoctorStmt:            q.createDoctorStmt,
+		createHospitalStmt:          q.createHospitalStmt,
+		createReviewStmt:            q.createReviewStmt,
+		createUserStmt:              q.createUserStmt,
+		deleteHospitalStmt:          q.deleteHospitalStmt,
+		getAppointmentsStmt:         q.getAppointmentsStmt,
+		getDoctorStmt:               q.getDoctorStmt,
+		getDoctorAppointmentsStmt:   q.getDoctorAppointmentsStmt,
+		getDoctorByEmailStmt:        q.getDoctorByEmailStmt,
+		getDoctorsBySpecialtyStmt:   q.getDoctorsBySpecialtyStmt,
+		getHospitalStmt:             q.getHospitalStmt,
+		getHospitalReviewsStmt:      q.getHospitalReviewsStmt,
+		getHospitalSpecialtiesStmt:  q.getHospitalSpecialtiesStmt,
+		getHospitalStatsStmt:        q.getHospitalStatsStmt,
+		getUserStmt:                 q.getUserStmt,
+		getUserAppointmentsStmt:     q.getUserAppointmentsStmt,
+		getUserByEmailStmt:          q.getUserByEmailStmt,
+		listDoctorsStmt:             q.listDoctorsStmt,
+		listHospitalsStmt:           q.listHospitalsStmt,
+		listHospitalsByLocationStmt: q.listHospitalsByLocationStmt,
+		updateAppointmentStatusStmt: q.updateAppointmentStatusStmt,
+		updateHospitalStmt:          q.updateHospitalStmt,
 	}
 }

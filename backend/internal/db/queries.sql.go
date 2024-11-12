@@ -11,9 +11,59 @@ import (
 	"time"
 )
 
-const createDoctor = `-- name: CreateDoctor :exec
-INSERT INTO doctors (name, hospital_id, specialty_id, license_number, phone, password, email, status)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+const addHospitalSpecialty = `-- name: AddHospitalSpecialty :exec
+INSERT INTO hospital_specialties (
+    hospital_id, specialty_id
+) VALUES (
+    ?, ?
+)
+`
+
+type AddHospitalSpecialtyParams struct {
+	HospitalID  sql.NullInt32 `json:"hospital_id"`
+	SpecialtyID sql.NullInt32 `json:"specialty_id"`
+}
+
+func (q *Queries) AddHospitalSpecialty(ctx context.Context, arg AddHospitalSpecialtyParams) error {
+	_, err := q.exec(ctx, q.addHospitalSpecialtyStmt, addHospitalSpecialty, arg.HospitalID, arg.SpecialtyID)
+	return err
+}
+
+const createAppointment = `-- name: CreateAppointment :execresult
+INSERT INTO appointments (
+    date, time, doctor_id, user_id, status, reason
+) VALUES (
+    ?, ?, ?, ?, ?, ?
+)
+`
+
+type CreateAppointmentParams struct {
+	Date     time.Time      `json:"date"`
+	Time     time.Time      `json:"time"`
+	DoctorID int32          `json:"doctor_id"`
+	UserID   int32          `json:"user_id"`
+	Status   string         `json:"status"`
+	Reason   sql.NullString `json:"reason"`
+}
+
+func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentParams) (sql.Result, error) {
+	return q.exec(ctx, q.createAppointmentStmt, createAppointment,
+		arg.Date,
+		arg.Time,
+		arg.DoctorID,
+		arg.UserID,
+		arg.Status,
+		arg.Reason,
+	)
+}
+
+const createDoctor = `-- name: CreateDoctor :execresult
+INSERT INTO doctors (
+    name, hospital_id, specialty_id, license_number,
+    phone, email, password, status
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?, ?
+)
 `
 
 type CreateDoctorParams struct {
@@ -22,29 +72,30 @@ type CreateDoctorParams struct {
 	SpecialtyID   sql.NullInt32  `json:"specialty_id"`
 	LicenseNumber string         `json:"license_number"`
 	Phone         sql.NullString `json:"phone"`
-	Password      sql.NullString `json:"password"`
-	Email         sql.NullString `json:"email"`
+	Email         string         `json:"email"`
+	Password      string         `json:"password"`
 	Status        string         `json:"status"`
 }
 
-// Create a new doctor
-func (q *Queries) CreateDoctor(ctx context.Context, arg CreateDoctorParams) error {
-	_, err := q.exec(ctx, q.createDoctorStmt, createDoctor,
+func (q *Queries) CreateDoctor(ctx context.Context, arg CreateDoctorParams) (sql.Result, error) {
+	return q.exec(ctx, q.createDoctorStmt, createDoctor,
 		arg.Name,
 		arg.HospitalID,
 		arg.SpecialtyID,
 		arg.LicenseNumber,
 		arg.Phone,
-		arg.Password,
 		arg.Email,
+		arg.Password,
 		arg.Status,
 	)
-	return err
 }
 
-const createHospital = `-- name: CreateHospital :exec
-INSERT INTO hospitals (name, location, level, rating, phone, email, address)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+const createHospital = `-- name: CreateHospital :execresult
+INSERT INTO hospitals (
+    name, location, level, rating, phone, email, address
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?
+)
 `
 
 type CreateHospitalParams struct {
@@ -57,9 +108,8 @@ type CreateHospitalParams struct {
 	Address  sql.NullString `json:"address"`
 }
 
-// Create a new hospital
-func (q *Queries) CreateHospital(ctx context.Context, arg CreateHospitalParams) error {
-	_, err := q.exec(ctx, q.createHospitalStmt, createHospital,
+func (q *Queries) CreateHospital(ctx context.Context, arg CreateHospitalParams) (sql.Result, error) {
+	return q.exec(ctx, q.createHospitalStmt, createHospital,
 		arg.Name,
 		arg.Location,
 		arg.Level,
@@ -68,138 +118,152 @@ func (q *Queries) CreateHospital(ctx context.Context, arg CreateHospitalParams) 
 		arg.Email,
 		arg.Address,
 	)
-	return err
 }
 
-const createReview = `-- name: CreateReview :exec
-INSERT INTO reviews (hospital_id, user_id, rating, comment)
-VALUES (?, ?, ?, ?)
+const createReview = `-- name: CreateReview :execresult
+INSERT INTO reviews (
+    hospital_id, user_id, rating, comment
+) VALUES (
+    ?, ?, ?, ?
+)
 `
 
 type CreateReviewParams struct {
-	HospitalID sql.NullInt32  `json:"hospital_id"`
+	HospitalID int32          `json:"hospital_id"`
 	UserID     int32          `json:"user_id"`
 	Rating     int32          `json:"rating"`
 	Comment    sql.NullString `json:"comment"`
 }
 
-// Create a new review
-func (q *Queries) CreateReview(ctx context.Context, arg CreateReviewParams) error {
-	_, err := q.exec(ctx, q.createReviewStmt, createReview,
+func (q *Queries) CreateReview(ctx context.Context, arg CreateReviewParams) (sql.Result, error) {
+	return q.exec(ctx, q.createReviewStmt, createReview,
 		arg.HospitalID,
 		arg.UserID,
 		arg.Rating,
 		arg.Comment,
 	)
-	return err
 }
 
-const createSpecialty = `-- name: CreateSpecialty :exec
-INSERT INTO specialties (name, description)
-VALUES (?, ?)
-`
-
-type CreateSpecialtyParams struct {
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
-}
-
-// Create a new specialty
-func (q *Queries) CreateSpecialty(ctx context.Context, arg CreateSpecialtyParams) error {
-	_, err := q.exec(ctx, q.createSpecialtyStmt, createSpecialty, arg.Name, arg.Description)
-	return err
-}
-
-const createUser = `-- name: CreateUser :exec
-INSERT INTO users (fullname, email, phone, password)
-VALUES (?, ?, ?, ?)
+const createUser = `-- name: CreateUser :execresult
+INSERT INTO users (
+    fullname, email, phone, password
+) VALUES (
+    ?, ?, ?, ?
+)
 `
 
 type CreateUserParams struct {
-	Fullname string `json:"fullname"`
-	Email    string `json:"email"`
-	Phone    string `json:"phone"`
-	Password string `json:"password"`
+	Fullname string         `json:"fullname"`
+	Email    string         `json:"email"`
+	Phone    sql.NullString `json:"phone"`
+	Password string         `json:"password"`
 }
 
-// Create a new user
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) error {
-	_, err := q.exec(ctx, q.createUserStmt, createUser,
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (sql.Result, error) {
+	return q.exec(ctx, q.createUserStmt, createUser,
 		arg.Fullname,
 		arg.Email,
 		arg.Phone,
 		arg.Password,
 	)
-	return err
-}
-
-const deleteDoctor = `-- name: DeleteDoctor :exec
-DELETE FROM doctors 
-WHERE id = ?
-`
-
-// Delete a doctor
-func (q *Queries) DeleteDoctor(ctx context.Context, id int32) error {
-	_, err := q.exec(ctx, q.deleteDoctorStmt, deleteDoctor, id)
-	return err
 }
 
 const deleteHospital = `-- name: DeleteHospital :exec
-DELETE FROM hospitals 
-WHERE id = ?
+DELETE FROM hospitals WHERE id = ?
 `
 
-// Delete a hospital
 func (q *Queries) DeleteHospital(ctx context.Context, id int32) error {
 	_, err := q.exec(ctx, q.deleteHospitalStmt, deleteHospital, id)
 	return err
 }
 
-const deleteSpecialty = `-- name: DeleteSpecialty :exec
-DELETE FROM specialties 
-WHERE id = ?
+const getAppointments = `-- name: GetAppointments :many
+SELECT 
+    a.id, a.date, a.time, a.doctor_id, a.user_id, a.status, a.reason, a.created_at, a.updated_at,
+    d.name as doctor_name,
+    u.fullname as patient_name
+FROM appointments a
+JOIN doctors d ON a.doctor_id = d.id
+JOIN users u ON a.user_id = u.id
+WHERE a.date = ?
 `
 
-// Delete a specialty
-func (q *Queries) DeleteSpecialty(ctx context.Context, id int32) error {
-	_, err := q.exec(ctx, q.deleteSpecialtyStmt, deleteSpecialty, id)
-	return err
+type GetAppointmentsRow struct {
+	ID          int32          `json:"id"`
+	Date        time.Time      `json:"date"`
+	Time        time.Time      `json:"time"`
+	DoctorID    int32          `json:"doctor_id"`
+	UserID      int32          `json:"user_id"`
+	Status      string         `json:"status"`
+	Reason      sql.NullString `json:"reason"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DoctorName  string         `json:"doctor_name"`
+	PatientName string         `json:"patient_name"`
 }
 
-const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM users 
-WHERE id = ?
-`
-
-// Delete a user
-func (q *Queries) DeleteUser(ctx context.Context, id int32) error {
-	_, err := q.exec(ctx, q.deleteUserStmt, deleteUser, id)
-	return err
+func (q *Queries) GetAppointments(ctx context.Context, date time.Time) ([]GetAppointmentsRow, error) {
+	rows, err := q.query(ctx, q.getAppointmentsStmt, getAppointments, date)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAppointmentsRow
+	for rows.Next() {
+		var i GetAppointmentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Date,
+			&i.Time,
+			&i.DoctorID,
+			&i.UserID,
+			&i.Status,
+			&i.Reason,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DoctorName,
+			&i.PatientName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
-const getDoctorByName = `-- name: GetDoctorByName :one
-SELECT id, name, hospital_id, specialty_id, license_number, phone, email, status, created_at, updated_at 
-FROM doctors 
-WHERE name = ?
+const getDoctor = `-- name: GetDoctor :one
+SELECT d.id, d.name, d.hospital_id, d.specialty_id, d.license_number, d.phone, d.password, d.email, d.status, d.created_at, d.updated_at, h.name as hospital_name, s.name as specialty_name
+FROM doctors d
+JOIN hospitals h ON d.hospital_id = h.id
+JOIN specialties s ON d.specialty_id = s.id
+WHERE d.id = ? LIMIT 1
 `
 
-type GetDoctorByNameRow struct {
+type GetDoctorRow struct {
 	ID            int32          `json:"id"`
 	Name          string         `json:"name"`
 	HospitalID    sql.NullInt32  `json:"hospital_id"`
 	SpecialtyID   sql.NullInt32  `json:"specialty_id"`
 	LicenseNumber string         `json:"license_number"`
 	Phone         sql.NullString `json:"phone"`
-	Email         sql.NullString `json:"email"`
+	Password      string         `json:"password"`
+	Email         string         `json:"email"`
 	Status        string         `json:"status"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
+	HospitalName  string         `json:"hospital_name"`
+	SpecialtyName string         `json:"specialty_name"`
 }
 
-// Get a doctor by Name
-func (q *Queries) GetDoctorByName(ctx context.Context, name string) (GetDoctorByNameRow, error) {
-	row := q.queryRow(ctx, q.getDoctorByNameStmt, getDoctorByName, name)
-	var i GetDoctorByNameRow
+func (q *Queries) GetDoctor(ctx context.Context, id int32) (GetDoctorRow, error) {
+	row := q.queryRow(ctx, q.getDoctorStmt, getDoctor, id)
+	var i GetDoctorRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -207,6 +271,96 @@ func (q *Queries) GetDoctorByName(ctx context.Context, name string) (GetDoctorBy
 		&i.SpecialtyID,
 		&i.LicenseNumber,
 		&i.Phone,
+		&i.Password,
+		&i.Email,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.HospitalName,
+		&i.SpecialtyName,
+	)
+	return i, err
+}
+
+const getDoctorAppointments = `-- name: GetDoctorAppointments :many
+SELECT 
+    a.id, a.date, a.time, a.doctor_id, a.user_id, a.status, a.reason, a.created_at, a.updated_at,
+    u.fullname as patient_name
+FROM appointments a
+JOIN users u ON a.user_id = u.id
+WHERE a.doctor_id = ? AND a.date BETWEEN ? AND ?
+ORDER BY a.date, a.time
+`
+
+type GetDoctorAppointmentsParams struct {
+	DoctorID int32     `json:"doctor_id"`
+	FromDate time.Time `json:"from_date"`
+	ToDate   time.Time `json:"to_date"`
+}
+
+type GetDoctorAppointmentsRow struct {
+	ID          int32          `json:"id"`
+	Date        time.Time      `json:"date"`
+	Time        time.Time      `json:"time"`
+	DoctorID    int32          `json:"doctor_id"`
+	UserID      int32          `json:"user_id"`
+	Status      string         `json:"status"`
+	Reason      sql.NullString `json:"reason"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	PatientName string         `json:"patient_name"`
+}
+
+func (q *Queries) GetDoctorAppointments(ctx context.Context, arg GetDoctorAppointmentsParams) ([]GetDoctorAppointmentsRow, error) {
+	rows, err := q.query(ctx, q.getDoctorAppointmentsStmt, getDoctorAppointments, arg.DoctorID, arg.FromDate, arg.ToDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDoctorAppointmentsRow
+	for rows.Next() {
+		var i GetDoctorAppointmentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Date,
+			&i.Time,
+			&i.DoctorID,
+			&i.UserID,
+			&i.Status,
+			&i.Reason,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PatientName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getDoctorByEmail = `-- name: GetDoctorByEmail :one
+SELECT id, name, hospital_id, specialty_id, license_number, phone, password, email, status, created_at, updated_at FROM doctors
+WHERE email = ? LIMIT 1
+`
+
+func (q *Queries) GetDoctorByEmail(ctx context.Context, email string) (Doctor, error) {
+	row := q.queryRow(ctx, q.getDoctorByEmailStmt, getDoctorByEmail, email)
+	var i Doctor
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.HospitalID,
+		&i.SpecialtyID,
+		&i.LicenseNumber,
+		&i.Phone,
+		&i.Password,
 		&i.Email,
 		&i.Status,
 		&i.CreatedAt,
@@ -215,15 +369,74 @@ func (q *Queries) GetDoctorByName(ctx context.Context, name string) (GetDoctorBy
 	return i, err
 }
 
-const getHospitalByName = `-- name: GetHospitalByName :one
-SELECT id, name, location, level, rating, phone, email, address, created_at, updated_at 
-FROM hospitals 
-WHERE name = ?
+const getDoctorsBySpecialty = `-- name: GetDoctorsBySpecialty :many
+SELECT 
+    d.id, d.name, d.hospital_id, d.specialty_id, d.license_number, d.phone, d.password, d.email, d.status, d.created_at, d.updated_at,
+    h.name as hospital_name
+FROM doctors d
+JOIN hospitals h ON d.hospital_id = h.id
+WHERE d.specialty_id = ? AND d.status = 'active'
+ORDER BY d.name
 `
 
-// Get a hospital by Name
-func (q *Queries) GetHospitalByName(ctx context.Context, name string) (Hospital, error) {
-	row := q.queryRow(ctx, q.getHospitalByNameStmt, getHospitalByName, name)
+type GetDoctorsBySpecialtyRow struct {
+	ID            int32          `json:"id"`
+	Name          string         `json:"name"`
+	HospitalID    sql.NullInt32  `json:"hospital_id"`
+	SpecialtyID   sql.NullInt32  `json:"specialty_id"`
+	LicenseNumber string         `json:"license_number"`
+	Phone         sql.NullString `json:"phone"`
+	Password      string         `json:"password"`
+	Email         string         `json:"email"`
+	Status        string         `json:"status"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	HospitalName  string         `json:"hospital_name"`
+}
+
+func (q *Queries) GetDoctorsBySpecialty(ctx context.Context, specialtyID sql.NullInt32) ([]GetDoctorsBySpecialtyRow, error) {
+	rows, err := q.query(ctx, q.getDoctorsBySpecialtyStmt, getDoctorsBySpecialty, specialtyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDoctorsBySpecialtyRow
+	for rows.Next() {
+		var i GetDoctorsBySpecialtyRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.HospitalID,
+			&i.SpecialtyID,
+			&i.LicenseNumber,
+			&i.Phone,
+			&i.Password,
+			&i.Email,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.HospitalName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getHospital = `-- name: GetHospital :one
+SELECT id, name, location, level, rating, phone, email, address, created_at, updated_at FROM hospitals
+WHERE id = ? LIMIT 1
+`
+
+func (q *Queries) GetHospital(ctx context.Context, id int32) (Hospital, error) {
+	row := q.queryRow(ctx, q.getHospitalStmt, getHospital, id)
 	var i Hospital
 	err := row.Scan(
 		&i.ID,
@@ -240,32 +453,213 @@ func (q *Queries) GetHospitalByName(ctx context.Context, name string) (Hospital,
 	return i, err
 }
 
-const getSpecialtyByName = `-- name: GetSpecialtyByName :one
-SELECT id, name, description, created_at 
-FROM specialties 
-WHERE name = ?
+const getHospitalReviews = `-- name: GetHospitalReviews :many
+SELECT 
+    r.id, r.hospital_id, r.user_id, r.rating, r.comment, r.created_at,
+    u.fullname as reviewer_name
+FROM reviews r
+JOIN users u ON r.user_id = u.id
+WHERE r.hospital_id = ?
+ORDER BY r.created_at DESC
 `
 
-// Get a specialty by Name
-func (q *Queries) GetSpecialtyByName(ctx context.Context, name string) (Specialty, error) {
-	row := q.queryRow(ctx, q.getSpecialtyByNameStmt, getSpecialtyByName, name)
-	var i Specialty
+type GetHospitalReviewsRow struct {
+	ID           int32          `json:"id"`
+	HospitalID   int32          `json:"hospital_id"`
+	UserID       int32          `json:"user_id"`
+	Rating       int32          `json:"rating"`
+	Comment      sql.NullString `json:"comment"`
+	CreatedAt    time.Time      `json:"created_at"`
+	ReviewerName string         `json:"reviewer_name"`
+}
+
+func (q *Queries) GetHospitalReviews(ctx context.Context, hospitalID int32) ([]GetHospitalReviewsRow, error) {
+	rows, err := q.query(ctx, q.getHospitalReviewsStmt, getHospitalReviews, hospitalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetHospitalReviewsRow
+	for rows.Next() {
+		var i GetHospitalReviewsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.HospitalID,
+			&i.UserID,
+			&i.Rating,
+			&i.Comment,
+			&i.CreatedAt,
+			&i.ReviewerName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getHospitalSpecialties = `-- name: GetHospitalSpecialties :many
+SELECT 
+    s.id, s.name, s.description, s.created_at
+FROM specialties s
+JOIN hospital_specialties hs ON s.id = hs.specialty_id
+WHERE hs.hospital_id = ?
+`
+
+func (q *Queries) GetHospitalSpecialties(ctx context.Context, hospitalID sql.NullInt32) ([]Specialty, error) {
+	rows, err := q.query(ctx, q.getHospitalSpecialtiesStmt, getHospitalSpecialties, hospitalID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Specialty
+	for rows.Next() {
+		var i Specialty
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getHospitalStats = `-- name: GetHospitalStats :one
+SELECT 
+    COUNT(DISTINCT d.id) as doctor_count,
+    COUNT(DISTINCT s.id) as specialty_count,
+    COALESCE(AVG(r.rating), 0) as average_rating,
+    COUNT(DISTINCT r.id) as review_count
+FROM hospitals h
+LEFT JOIN doctors d ON h.id = d.hospital_id
+LEFT JOIN hospital_specialties hs ON h.id = hs.hospital_id
+LEFT JOIN specialties s ON hs.specialty_id = s.id
+LEFT JOIN reviews r ON h.id = r.hospital_id
+WHERE h.id = ?
+GROUP BY h.id
+`
+
+type GetHospitalStatsRow struct {
+	DoctorCount    int64       `json:"doctor_count"`
+	SpecialtyCount int64       `json:"specialty_count"`
+	AverageRating  interface{} `json:"average_rating"`
+	ReviewCount    int64       `json:"review_count"`
+}
+
+func (q *Queries) GetHospitalStats(ctx context.Context, id int32) (GetHospitalStatsRow, error) {
+	row := q.queryRow(ctx, q.getHospitalStatsStmt, getHospitalStats, id)
+	var i GetHospitalStatsRow
 	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.CreatedAt,
+		&i.DoctorCount,
+		&i.SpecialtyCount,
+		&i.AverageRating,
+		&i.ReviewCount,
 	)
 	return i, err
 }
 
-const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, fullname, email, phone, password, created_at, updated_at 
-FROM users 
-WHERE email = ?
+const getUser = `-- name: GetUser :one
+SELECT id, fullname, email, phone, password, created_at, updated_at FROM users
+WHERE id = ? LIMIT 1
 `
 
-// Get a user by Email
+func (q *Queries) GetUser(ctx context.Context, id int32) (User, error) {
+	row := q.queryRow(ctx, q.getUserStmt, getUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Fullname,
+		&i.Email,
+		&i.Phone,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserAppointments = `-- name: GetUserAppointments :many
+SELECT 
+    a.id, a.date, a.time, a.doctor_id, a.user_id, a.status, a.reason, a.created_at, a.updated_at,
+    d.name as doctor_name,
+    h.name as hospital_name
+FROM appointments a
+JOIN doctors d ON a.doctor_id = d.id
+JOIN hospitals h ON d.hospital_id = h.id
+WHERE a.user_id = ?
+ORDER BY a.date DESC, a.time DESC
+`
+
+type GetUserAppointmentsRow struct {
+	ID           int32          `json:"id"`
+	Date         time.Time      `json:"date"`
+	Time         time.Time      `json:"time"`
+	DoctorID     int32          `json:"doctor_id"`
+	UserID       int32          `json:"user_id"`
+	Status       string         `json:"status"`
+	Reason       sql.NullString `json:"reason"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DoctorName   string         `json:"doctor_name"`
+	HospitalName string         `json:"hospital_name"`
+}
+
+func (q *Queries) GetUserAppointments(ctx context.Context, userID int32) ([]GetUserAppointmentsRow, error) {
+	rows, err := q.query(ctx, q.getUserAppointmentsStmt, getUserAppointments, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserAppointmentsRow
+	for rows.Next() {
+		var i GetUserAppointmentsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Date,
+			&i.Time,
+			&i.DoctorID,
+			&i.UserID,
+			&i.Status,
+			&i.Reason,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DoctorName,
+			&i.HospitalName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserByEmail = `-- name: GetUserByEmail :one
+SELECT id, fullname, email, phone, password, created_at, updated_at FROM users
+WHERE email = ? LIMIT 1
+`
+
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	row := q.queryRow(ctx, q.getUserByEmailStmt, getUserByEmail, email)
 	var i User
@@ -282,8 +676,11 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const listDoctors = `-- name: ListDoctors :many
-SELECT id, name, hospital_id, specialty_id, license_number, phone, email, status, created_at, updated_at 
-FROM doctors
+SELECT d.id, d.name, d.hospital_id, d.specialty_id, d.license_number, d.phone, d.password, d.email, d.status, d.created_at, d.updated_at, h.name as hospital_name, s.name as specialty_name
+FROM doctors d
+JOIN hospitals h ON d.hospital_id = h.id
+JOIN specialties s ON d.specialty_id = s.id
+ORDER BY d.name
 `
 
 type ListDoctorsRow struct {
@@ -293,13 +690,15 @@ type ListDoctorsRow struct {
 	SpecialtyID   sql.NullInt32  `json:"specialty_id"`
 	LicenseNumber string         `json:"license_number"`
 	Phone         sql.NullString `json:"phone"`
-	Email         sql.NullString `json:"email"`
+	Password      string         `json:"password"`
+	Email         string         `json:"email"`
 	Status        string         `json:"status"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
+	HospitalName  string         `json:"hospital_name"`
+	SpecialtyName string         `json:"specialty_name"`
 }
 
-// Get all doctors
 func (q *Queries) ListDoctors(ctx context.Context) ([]ListDoctorsRow, error) {
 	rows, err := q.query(ctx, q.listDoctorsStmt, listDoctors)
 	if err != nil {
@@ -316,47 +715,13 @@ func (q *Queries) ListDoctors(ctx context.Context) ([]ListDoctorsRow, error) {
 			&i.SpecialtyID,
 			&i.LicenseNumber,
 			&i.Phone,
+			&i.Password,
 			&i.Email,
 			&i.Status,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listHospitalReviews = `-- name: ListHospitalReviews :many
-SELECT id, hospital_id, user_id, rating, comment, created_at 
-FROM reviews 
-WHERE hospital_id = ?
-`
-
-// Get all reviews for a hospital
-func (q *Queries) ListHospitalReviews(ctx context.Context, hospitalID sql.NullInt32) ([]Review, error) {
-	rows, err := q.query(ctx, q.listHospitalReviewsStmt, listHospitalReviews, hospitalID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Review
-	for rows.Next() {
-		var i Review
-		if err := rows.Scan(
-			&i.ID,
-			&i.HospitalID,
-			&i.UserID,
-			&i.Rating,
-			&i.Comment,
-			&i.CreatedAt,
+			&i.HospitalName,
+			&i.SpecialtyName,
 		); err != nil {
 			return nil, err
 		}
@@ -372,11 +737,10 @@ func (q *Queries) ListHospitalReviews(ctx context.Context, hospitalID sql.NullIn
 }
 
 const listHospitals = `-- name: ListHospitals :many
-SELECT id, name, location, level, rating, phone, email, address, created_at, updated_at 
-FROM hospitals
+SELECT id, name, location, level, rating, phone, email, address, created_at, updated_at FROM hospitals
+ORDER BY name
 `
 
-// Get all hospitals
 func (q *Queries) ListHospitals(ctx context.Context) ([]Hospital, error) {
 	rows, err := q.query(ctx, q.listHospitalsStmt, listHospitals)
 	if err != nil {
@@ -411,69 +775,30 @@ func (q *Queries) ListHospitals(ctx context.Context) ([]Hospital, error) {
 	return items, nil
 }
 
-const listSpecialties = `-- name: ListSpecialties :many
-SELECT id, name, description, created_at 
-FROM specialties
+const listHospitalsByLocation = `-- name: ListHospitalsByLocation :many
+SELECT id, name, location, level, rating, phone, email, address, created_at, updated_at FROM hospitals
+WHERE location = ?
+ORDER BY rating DESC
 `
 
-// Get all specialties
-func (q *Queries) ListSpecialties(ctx context.Context) ([]Specialty, error) {
-	rows, err := q.query(ctx, q.listSpecialtiesStmt, listSpecialties)
+func (q *Queries) ListHospitalsByLocation(ctx context.Context, location string) ([]Hospital, error) {
+	rows, err := q.query(ctx, q.listHospitalsByLocationStmt, listHospitalsByLocation, location)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Specialty
+	var items []Hospital
 	for rows.Next() {
-		var i Specialty
+		var i Hospital
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Description,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listUsers = `-- name: ListUsers :many
-SELECT id, fullname, email, phone, created_at, updated_at 
-FROM users
-`
-
-type ListUsersRow struct {
-	ID        int32          `json:"id"`
-	Fullname  string         `json:"fullname"`
-	Email     sql.NullString `json:"email"`
-	Phone     sql.NullString `json:"phone"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
-}
-
-// Get all users
-func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
-	rows, err := q.query(ctx, q.listUsersStmt, listUsers)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListUsersRow
-	for rows.Next() {
-		var i ListUsersRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Fullname,
-			&i.Email,
+			&i.Location,
+			&i.Level,
+			&i.Rating,
 			&i.Phone,
+			&i.Email,
+			&i.Address,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -490,43 +815,26 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 	return items, nil
 }
 
-const updateDoctor = `-- name: UpdateDoctor :exec
-UPDATE doctors 
-SET name = ?, hospital_id = ?, specialty_id = ?, license_number = ?, phone = ?,password = ?, email = ?, status = ?, updated_at = CURRENT_TIMESTAMP 
+const updateAppointmentStatus = `-- name: UpdateAppointmentStatus :exec
+UPDATE appointments 
+SET status = ?
 WHERE id = ?
 `
 
-type UpdateDoctorParams struct {
-	Name          string         `json:"name"`
-	HospitalID    sql.NullInt32  `json:"hospital_id"`
-	SpecialtyID   sql.NullInt32  `json:"specialty_id"`
-	LicenseNumber string         `json:"license_number"`
-	Phone         sql.NullString `json:"phone"`
-	Password      sql.NullString `json:"password"`
-	Email         sql.NullString `json:"email"`
-	Status        string         `json:"status"`
-	ID            int32          `json:"id"`
+type UpdateAppointmentStatusParams struct {
+	Status string `json:"status"`
+	ID     int32  `json:"id"`
 }
 
-// Update a doctor's details
-func (q *Queries) UpdateDoctor(ctx context.Context, arg UpdateDoctorParams) error {
-	_, err := q.exec(ctx, q.updateDoctorStmt, updateDoctor,
-		arg.Name,
-		arg.HospitalID,
-		arg.SpecialtyID,
-		arg.LicenseNumber,
-		arg.Phone,
-		arg.Password,
-		arg.Email,
-		arg.Status,
-		arg.ID,
-	)
+func (q *Queries) UpdateAppointmentStatus(ctx context.Context, arg UpdateAppointmentStatusParams) error {
+	_, err := q.exec(ctx, q.updateAppointmentStatusStmt, updateAppointmentStatus, arg.Status, arg.ID)
 	return err
 }
 
 const updateHospital = `-- name: UpdateHospital :exec
 UPDATE hospitals 
-SET name = ?, location = ?, level = ?, rating = ?, phone = ?, email = ?, address = ?, updated_at = CURRENT_TIMESTAMP 
+SET name = ?, location = ?, level = ?, rating = ?, 
+    phone = ?, email = ?, address = ?
 WHERE id = ?
 `
 
@@ -541,7 +849,6 @@ type UpdateHospitalParams struct {
 	ID       int32          `json:"id"`
 }
 
-// Update a hospital's details
 func (q *Queries) UpdateHospital(ctx context.Context, arg UpdateHospitalParams) error {
 	_, err := q.exec(ctx, q.updateHospitalStmt, updateHospital,
 		arg.Name,
@@ -551,50 +858,6 @@ func (q *Queries) UpdateHospital(ctx context.Context, arg UpdateHospitalParams) 
 		arg.Phone,
 		arg.Email,
 		arg.Address,
-		arg.ID,
-	)
-	return err
-}
-
-const updateSpecialty = `-- name: UpdateSpecialty :exec
-UPDATE specialties 
-SET name = ?, description = ?, created_at = CURRENT_TIMESTAMP 
-WHERE id = ?
-`
-
-type UpdateSpecialtyParams struct {
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
-	ID          int32          `json:"id"`
-}
-
-// Update a specialty's details
-func (q *Queries) UpdateSpecialty(ctx context.Context, arg UpdateSpecialtyParams) error {
-	_, err := q.exec(ctx, q.updateSpecialtyStmt, updateSpecialty, arg.Name, arg.Description, arg.ID)
-	return err
-}
-
-const updateUser = `-- name: UpdateUser :exec
-UPDATE users 
-SET fullname = ?, email = ?, phone = ?, password = ?, updated_at = CURRENT_TIMESTAMP 
-WHERE id = ?
-`
-
-type UpdateUserParams struct {
-	Fullname string         `json:"fullname"`
-	Email    sql.NullString `json:"email"`
-	Phone    sql.NullString `json:"phone"`
-	Password sql.NullString `json:"password"`
-	ID       int32          `json:"id"`
-}
-
-// Update a user's details
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) error {
-	_, err := q.exec(ctx, q.updateUserStmt, updateUser,
-		arg.Fullname,
-		arg.Email,
-		arg.Phone,
-		arg.Password,
 		arg.ID,
 	)
 	return err

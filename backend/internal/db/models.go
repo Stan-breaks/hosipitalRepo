@@ -9,6 +9,18 @@ import (
 	"time"
 )
 
+type Appointment struct {
+	ID        int32          `json:"id"`
+	Date      time.Time      `json:"date"`
+	Time      time.Time      `json:"time"`
+	DoctorID  int32          `json:"doctor_id"`
+	UserID    int32          `json:"user_id"`
+	Status    string         `json:"status"`
+	Reason    sql.NullString `json:"reason"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+}
+
 type Doctor struct {
 	ID            int32          `json:"id"`
 	Name          string         `json:"name"`
@@ -16,8 +28,8 @@ type Doctor struct {
 	SpecialtyID   sql.NullInt32  `json:"specialty_id"`
 	LicenseNumber string         `json:"license_number"`
 	Phone         sql.NullString `json:"phone"`
-	Password      sql.NullString `json:"password"`
-	Email         sql.NullString `json:"email"`
+	Password      string         `json:"password"`
+	Email         string         `json:"email"`
 	Status        string         `json:"status"`
 	CreatedAt     time.Time      `json:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at"`
@@ -43,7 +55,7 @@ type HospitalSpecialty struct {
 
 type Review struct {
 	ID         int32          `json:"id"`
-	HospitalID sql.NullInt32  `json:"hospital_id"`
+	HospitalID int32          `json:"hospital_id"`
 	UserID     int32          `json:"user_id"`
 	Rating     int32          `json:"rating"`
 	Comment    sql.NullString `json:"comment"`
@@ -60,9 +72,9 @@ type Specialty struct {
 type User struct {
 	ID        int32          `json:"id"`
 	Fullname  string         `json:"fullname"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
-	Password  string `json:"password"`
+	Email     string         `json:"email"`
+	Phone     sql.NullString `json:"phone"`
+	Password  string         `json:"password"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 }
